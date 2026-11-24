@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Latinex Data Hub — Consola de Inteligencia Tarifaria (Admin)</title>
+  <link rel="icon" type="image/png" href="./src/assets/logolatinex.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: #f4f7fa;
+      color: #1a1a1a;
+    }
+    .latinex-nav {
+      background-color: #09355e;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- HEADER INSTITUCIONAL LATINEX -->
+  <header class="latinex-nav text-white shadow-md border-b-2 border-[#37a7e6]">
+    <div class="max-w-7xl mx-auto px-6 h-[110px] flex items-center justify-between">
+      <div class="flex items-center gap-7">
+        <a href="/" class="flex items-center gap-3 select-none">
+          <img src="./src/assets/logolatinex-header.png" alt="Latinex — Bolsa Latinoamericana de Valores" class="h-[72px] w-auto object-contain block" />
+          <span class="text-xs font-medium text-sky-300 border-l border-sky-400/30 pl-3">Data Hub · Admin</span>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs">
+        <div class="text-right">
+          <div class="font-semibold text-white">Consola de Inteligencia Tarifaria</div>
+          <div class="text-sky-300 text-[11px]">Acceso Restringido</div>
+        </div>
+        <button id="btnLogout" onclick="adminLogout()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-500 text-slate-100 font-semibold transition">
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+
+    <!-- PANTALLA DE LOGIN ADMIN -->
+    <section id="adminLoginView" class="max-w-md mx-auto mt-10 bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+      <div>
+        <span class="inline-block bg-amber-100 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded uppercase">
+          Acceso Protegido
+        </span>
+        <h1 class="text-lg font-bold text-[#094174] mt-2">
+          Consola de Análisis WTP
+        </h1>
+        <p class="text-xs text-slate-600 mt-1">
+          Ingrese la contraseña de administrador para consultar las respuestas almacenadas en PostgreSQL y las curvas de Van Westendorp / NMS.
+        </p>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label for="inpAdminPassword" class="block text-xs font-bold text-slate-700 mb-1">Contraseña de Administrador</label>
+          <input
+            id="inpAdminPassword"
+            type="password"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••••••"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008ECB]"
+          />
+        </div>
+
+        <div id="loginErrorBox" class="hidden bg-red-50 border-l-4 border-red-600 p-3 rounded text-xs text-red-900 font-medium"></div>
+
+        <button
+          id="btnLoginSubmit"
+          type="submit"
+          class="w-full bg-[#094174] hover:bg-[#008ECB] text-white font-bold py-2.5 rounded-lg text-sm transition"
+        >
+          Ingresar a la Consola
+        </button>
+      </form>
+    </section>
+
+    <!-- CONSOLA DE ANÁLISIS (SOLO VISIBLE CON SESIÓN ACTIVA) -->
+    <section id="viewSuperAdmin" class="hidden space-y-6">
+
+      <div class="bg-[#094174] text-white rounded-xl p-5 shadow flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-950 text-[11px] font-bold px-2 py-0.5 rounded uppercase">
+              Consola de Inteligencia Tarifaria
+            </span>
+            <span class="text-xs text-sky-200 font-medium">
+              Análisis consolidado de sensibilidad de precios y curvas de demanda (PostgreSQL)
+            </span>
+          </div>
+          <h1 class="text-xl font-bold mt-1">
+            Tablero de Estimación de Precios y Optimización de Ingresos
+          </h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="bg-white/10 border border-white/20 px-4 py-2 rounded-lg text-right">
+            <div class="text-[11px] text-sky-200">Muestra Analizada</div>
+            <div id="kpiQuorumCount" class="text-base font-bold text-emerald-300">0 Entidades</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs de Consola Admin -->
+      <div role="tablist" aria-label="Secciones de la consola administrativa" class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+        <button
+          type="button"
+          role="tab"
+          id="adminTabBtnAnalytics"
+          aria-selected="true"
+          aria-controls="adminTabPanelAnalytics"
+          onclick="selectAdminTab('Analytics')"
+          onkeydown="handleAdminTabKeydown(event, 0)"
+          class="px-4 py-2 rounded-lg text-xs font-bold bg-[#094174] text-white shadow-sm transition"
+        >
+          Análisis de Precios y Respuestas
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="adminTabBtnServices"
+          aria-selected="false"
+          aria-controls="adminTabPanelServices"
+          tabindex="-1"
+          onclick="selectAdminTab('Services')"
+          onkeydown="handleAdminTabKeydown(event, 1)"
+          class="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition"
+        >
+          Catálogo de Servicios Complementarios
+        </button>
+      </div>
+
+      <!-- TAB 1: ANÁLISIS DE PRECIOS Y RESPUESTAS -->
+      <div id="adminTabPanelAnalytics" role="tabpanel" aria-labelledby="adminTabBtnAnalytics" class="space-y-6">
+
+      <!-- Controles Admin -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="font-bold text-[#094174]">Filtrar por Segmento:</label>
+          <select id="adminSegmentFilter" onchange="renderSuperAdminDashboard()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-white">
+            <option value="ALL">Todos los segmentos</option>
+            <option value="Puesto de Bolsa">Puestos de Bolsa / Casas de Valores</option>
+            <option value="Banco">Bancos Comerciales e Integrados</option>
+            <option value="Wealth Management">Wealth Management / Gestores</option>
+            <option value="Proveedor">Proveedores Financieros / Otros</option>
+          </select>
+          <span class="bg-[#EAF1F6] text-[#094174] font-semibold px-3 py-1.5 rounded-lg border border-sky-200">
+            Rango de Precios Aceptables (RAP): <span id="lblRapRange" class="font-bold">$0 – $0 / mes</span>
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="fetchAdminResponses()" class="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold transition">
+            ↻ Actualizar Datos
+          </button>
+          <a href="/api/v1/admin/export.csv" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition inline-block">
+            ⬇ Exportar CSV
+          </a>
+        </div>
+      </div>
+
+      <!-- Banner de Capacidad -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="space-y-0.5">
+          <div class="font-bold text-[#094174]">Proyección de Capacidad Técnica sobre la Muestra</div>
+          <div class="text-slate-600">Al precio óptimo de $<span id="lblCapPrice" class="font-bold text-slate-800">0</span> / mes, se proyecta recaudar ~$<span id="lblCapAnnual" class="font-bold text-emerald-700">0</span> USD anuales sobre el segmento visible.</div>
+        </div>
+        <div class="bg-[#EAF1F6] px-3.5 py-2 rounded border-l-4 border-[#008ECB] text-slate-700">
+          <span class="font-semibold text-[#094174]">Capacidad financiada:</span> Ingeniería dedicada de soporte, SLA operativo y evolución continua de datasets.
+        </div>
+      </div>
+
+      <!-- KPIs Calculados -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500">Límite Inferior Aceptable (PMC)</div>
+          <div id="kpiPmc" class="text-2xl font-bold text-[#094174] mt-1">$0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Por debajo genera duda de calidad</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border-2 border-[#008ECB] shadow-sm">
+          <div class="text-xs font-bold text-[#008ECB]">Precio Óptimo (OPP)</div>
+          <div id="kpiOpp" class="text-2xl font-bold text-[#094174] mt-1">$0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Menor resistencia entre evaluadores</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500">Punto de Indiferencia (IPP)</div>
+          <div id="kpiIpp" class="text-2xl font-bold text-[#094174] mt-1">$0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Equilibrio entre atractiva y elevada</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500">Límite Superior Aceptable (PME)</div>
+          <div id="kpiPme" class="text-2xl font-bold text-[#094174] mt-1">$0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Por encima se descarta contratación</div>
+        </div>
+        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-300 shadow-sm">
+          <div class="text-xs font-bold text-emerald-800">Máx. Ingreso Esperado (NMS)</div>
+          <div id="kpiNmsOptPrice" class="text-2xl font-bold text-emerald-900 mt-1">$0 / mes</div>
+          <div id="kpiNmsOptMrr" class="text-[11px] text-emerald-700 font-medium mt-1">Ingreso Mensual Estimado</div>
+        </div>
+      </div>
+
+      <!-- Gráficos SVG -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="mb-3">
+            <h3 class="text-sm font-bold text-[#094174]">
+              Curvas de Percepción de Precios y Rango Aceptable (Van Westendorp)
+            </h3>
+            <p class="text-[11px] text-slate-500">
+              Distribución acumulada de respuestas según cada nivel de tarifa
+            </p>
+          </div>
+          <div id="svgVanWestendorpContainer" class="w-full h-64 bg-slate-50 rounded border border-slate-100 flex items-center justify-center"></div>
+          <div class="flex flex-wrap gap-4 justify-center text-[11px] mt-3 font-medium">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-sky-500 inline-block"></span> Sospechosamente Baja</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-emerald-600 inline-block"></span> Atractiva</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-amber-500 inline-block"></span> Elevada</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-rose-600 inline-block"></span> Prohibitiva</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="mb-3">
+            <h3 class="text-sm font-bold text-[#094174]">
+              Curva de Ingreso Mensual Esperado por Nivel de Precio (NMS)
+            </h3>
+            <p class="text-[11px] text-slate-500">
+              Proyección combinando tarifa mensual y probabilidad de adopción a 90 días
+            </p>
+          </div>
+          <div id="svgNmsRevenueContainer" class="w-full h-64 bg-slate-50 rounded border border-slate-100 flex items-center justify-center"></div>
+          <div class="text-center text-[11px] text-slate-600 mt-3">
+            El punto verde identifica el precio que optimiza la recaudación mensual esperada dentro del rango aceptable.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Respuestas Registradas -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 space-y-2 bg-slate-50">
+          <div>
+            <h3 class="text-sm font-bold text-[#094174]">
+              Matriz de Respuestas Registradas
+            </h3>
+            <p class="text-xs text-slate-500">
+              Registros persistidos en base de datos PostgreSQL
+            </p>
+          </div>
+          <div class="bg-[#EAF1F6] border-l-4 border-[#008ECB] rounded-r px-3.5 py-2.5 text-[11px] text-slate-700 leading-relaxed">
+            <strong class="text-[#094174]">Interpretación de Adopción (A / E) — Modelo Newton-Miller-Smith (NMS):</strong>
+            <strong>A</strong> indica la intención de contratación a 90 días a la <em>Tarifa Atractiva</em> y <strong>E</strong> a la <em>Tarifa Elevada</em> (escala 1 a 5).
+            Pesos de probabilidad: <span class="font-mono font-semibold">5 = Definitivamente SÍ (70%)</span> · <span class="font-mono font-semibold">4 = Probablemente SÍ (50%)</span> · <span class="font-mono font-semibold">3 = Indeciso (30%)</span> · <span class="font-mono font-semibold">2 = Probablemente NO (10%)</span> · <span class="font-mono font-semibold">1 = Definitivamente NO (0%)</span>.
+            Ej.: <span class="font-mono font-bold text-[#094174]">5 / 3</span> refleja alta adopción en tarifa atractiva y adopción moderada en tarifa elevada.
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-[#094174] text-white">
+                <th class="py-2.5 px-3">#</th>
+                <th class="py-2.5 px-3">Institución / Alias</th>
+                <th class="py-2.5 px-3">Rol / Contacto</th>
+                <th class="py-2.5 px-3">Segmento</th>
+                <th class="py-2.5 px-3 text-right">Sosp. Baja</th>
+                <th class="py-2.5 px-3 text-right">Atractiva</th>
+                <th class="py-2.5 px-3 text-right">Elevada</th>
+                <th class="py-2.5 px-3 text-right">Prohibitiva</th>
+                <th class="py-2.5 px-3 text-center" title="Probabilidad de contratación a 90 días en Tarifa Atractiva (A) / Tarifa Elevada (E), escala 1 a 5">Adopción (A / E)</th>
+                <th class="py-2.5 px-3 text-center">Pipeline API</th>
+                <th class="py-2.5 px-3 text-center">Dashboard Marca</th>
+                <th class="py-2.5 px-3 text-center">Kit / SDK</th>
+                <th class="py-2.5 px-3">Datasets / Notas</th>
+              </tr>
+            </thead>
+            <tbody id="surveyTableBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+      </div><!-- Fin TAB 1 -->
+
+      <!-- TAB 2: CATÁLOGO DE SERVICIOS COMPLEMENTARIOS (FACTURACIÓN ADICIONAL) -->
+      <div id="adminTabPanelServices" role="tabpanel" aria-labelledby="adminTabBtnServices" class="hidden space-y-6">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50">
+          <div>
+            <h3 class="text-sm font-bold text-[#094174]">
+              Catálogo de Servicios Complementarios Opcionales (Facturación Adicional)
+            </h3>
+            <p class="text-xs text-slate-500">
+              Los cambios se guardan en PostgreSQL (volumen persistente) y se reflejan de inmediato en el Paso 5 de la encuesta pública.
+            </p>
+          </div>
+          <button onclick="resetServiceForm()" class="px-3 py-1.5 rounded-lg bg-[#094174] hover:bg-[#008ECB] text-white text-xs font-semibold transition">
+            + Nuevo Servicio
+          </button>
+        </div>
+
+        <form id="serviceForm" onsubmit="saveService(event)" class="p-5 border-b border-slate-200 bg-slate-50/50 space-y-3 text-xs">
+          <input type="hidden" id="srvEditId" value="" />
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Código *</label>
+              <input id="srvCode" type="text" required maxlength="30" placeholder="ej. SRV-E2E-03" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Nombre del Servicio *</label>
+              <input id="srvName" type="text" required maxlength="150" placeholder="ej. Dashboard Institucional White-Label" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white" />
+            </div>
+            <div class="flex items-end pb-1">
+              <label class="flex items-center gap-2 font-bold text-slate-700 cursor-pointer">
+                <input id="srvActive" type="checkbox" checked class="w-4 h-4" />
+                <span>Activo en encuesta</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Setup Fee (USD) *</label>
+              <input id="srvSetupFee" type="number" step="0.01" min="0" required value="0" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Mensualidad (USD/mes) *</label>
+              <input id="srvMonthlyFee" type="number" step="0.01" min="0" required value="0" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Descripción</label>
+              <input id="srvDesc" type="text" maxlength="1000" placeholder="Descripción breve para el encuestado" class="w-full border border-slate-300 rounded px-2.5 py-1.5 bg-white" />
+            </div>
+          </div>
+
+          <div id="serviceErrorBox" class="hidden bg-red-50 border-l-4 border-red-600 p-2.5 rounded text-red-900 font-medium"></div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <button id="btnSaveService" type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition">
+              Guardar Servicio
+            </button>
+            <button type="button" onclick="resetServiceForm()" class="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold transition">
+              Cancelar / Limpiar
+            </button>
+          </div>
+        </form>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-800 text-white">
+                <th class="py-2.5 px-3">Código</th>
+                <th class="py-2.5 px-3">Nombre del Servicio</th>
+                <th class="py-2.5 px-3 text-right">Setup (USD)</th>
+                <th class="py-2.5 px-3 text-right">Mensual (USD)</th>
+                <th class="py-2.5 px-3 text-center">Estado</th>
+                <th class="py-2.5 px-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="servicesTableBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+      </div><!-- Fin TAB 2 -->
+
+    </section>
+
+  </main>
+
+  <script>
+    const PROBABILITY_WEIGHTS = { 1: 0.0, 2: 0.1, 3: 0.3, 4: 0.5, 5: 0.7 };
+    const ADMIN_TABS = ["Analytics", "Services"];
+    let surveyResponses = [];
+    let catalogServices = [];
+
+    function selectAdminTab(tabName) {
+      ADMIN_TABS.forEach(name => {
+        const btn = document.getElementById("adminTabBtn" + name);
+        const panel = document.getElementById("adminTabPanel" + name);
+        const selected = name === tabName;
+        btn.setAttribute("aria-selected", selected ? "true" : "false");
+        btn.tabIndex = selected ? 0 : -1;
+        if (selected) {
+          btn.className = "px-4 py-2 rounded-lg text-xs font-bold bg-[#094174] text-white shadow-sm transition";
+          panel.classList.remove("hidden");
+        } else {
+          btn.className = "px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition";
+          panel.classList.add("hidden");
+        }
+      });
+    }
+
+    function handleAdminTabKeydown(event, idx) {
+      let nextIdx = null;
+      if (event.key === "ArrowRight") nextIdx = (idx + 1) % ADMIN_TABS.length;
+      else if (event.key === "ArrowLeft") nextIdx = (idx - 1 + ADMIN_TABS.length) % ADMIN_TABS.length;
+      if (nextIdx !== null) {
+        event.preventDefault();
+        const nextName = ADMIN_TABS[nextIdx];
+        selectAdminTab(nextName);
+        document.getElementById("adminTabBtn" + nextName).focus();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("/api/v1/admin/me", { credentials: "same-origin" });
+        if (res.ok) {
+          showAuthenticatedView();
+          await Promise.all([fetchAdminResponses(), fetchAdminServices()]);
+        }
+      } catch (_) {}
+    });
+
+    function showAuthenticatedView() {
+      document.getElementById("adminLoginView").classList.add("hidden");
+      document.getElementById("viewSuperAdmin").classList.remove("hidden");
+      document.getElementById("btnLogout").classList.remove("hidden");
+    }
+
+    function showLoginView() {
+      document.getElementById("adminLoginView").classList.remove("hidden");
+      document.getElementById("viewSuperAdmin").classList.add("hidden");
+      document.getElementById("btnLogout").classList.add("hidden");
+      surveyResponses = [];
+    }
+
+    async function handleAdminLogin(event) {
+      event.preventDefault();
+      const errBox = document.getElementById("loginErrorBox");
+      const btn = document.getElementById("btnLoginSubmit");
+      const password = document.getElementById("inpAdminPassword").value;
+
+      errBox.classList.add("hidden");
+      btn.disabled = true;
+      btn.textContent = "Verificando...";
+
+      try {
+        const res = await fetch("/api/v1/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ password })
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          errBox.textContent = data.detail || "Contraseña incorrecta.";
+          errBox.classList.remove("hidden");
+          return;
+        }
+
+        document.getElementById("inpAdminPassword").value = "";
+        showAuthenticatedView();
+        await Promise.all([fetchAdminResponses(), fetchAdminServices()]);
+      } catch (err) {
+        errBox.textContent = "Error de conexión con el servidor.";
+        errBox.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ingresar a la Consola";
+      }
+    }
+
+    async function adminLogout() {
+      await fetch("/api/v1/admin/logout", { method: "POST", credentials: "same-origin" });
+      showLoginView();
+    }
+
+    async function fetchAdminResponses() {
+      const res = await fetch("/api/v1/admin/responses", { credentials: "same-origin" });
+      if (res.status === 401) {
+        showLoginView();
+        return;
+      }
+      if (!res.ok) return;
+      const data = await res.json();
+      surveyResponses = data.responses || [];
+      renderSuperAdminDashboard();
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function intersect(grid, curveA, curveB) {
+      for (let i = 0; i < grid.length - 1; i++) {
+        const d1 = curveA[i] - curveB[i];
+        const d2 = curveA[i + 1] - curveB[i + 1];
+        if ((d1 >= 0 && d2 <= 0) || (d1 <= 0 && d2 >= 0)) {
+          const frac = Math.abs(d1 - d2) < 1e-9 ? 0 : d1 / (d1 - d2);
+          return Math.round(grid[i] + frac * (grid[i + 1] - grid[i]));
+        }
+      }
+      return 0;
+    }
+
+    function getFilteredResponses() {
+      const seg = document.getElementById("adminSegmentFilter")?.value || "ALL";
+      if (seg === "ALL") return surveyResponses;
+      return surveyResponses.filter(r => (r.segment || "").includes(seg));
+    }
+
+    function renderSuperAdminDashboard() {
+      const filtered = getFilteredResponses();
+      const N = filtered.length;
+      document.getElementById("kpiQuorumCount").textContent = `${N} Entidades`;
+
+      if (N === 0) {
+        ["kpiPmc", "kpiOpp", "kpiIpp", "kpiPme", "kpiNmsOptPrice"].forEach(id => {
+          document.getElementById(id).textContent = "$0 / mes";
+        });
+        document.getElementById("lblRapRange").textContent = "$0 – $0 / mes";
+        document.getElementById("kpiNmsOptMrr").textContent = "Ingreso Mensual Estimado: $0 / mes";
+        document.getElementById("lblCapPrice").textContent = "0";
+        document.getElementById("lblCapAnnual").textContent = "0";
+        document.getElementById("svgVanWestendorpContainer").innerHTML = "<span class='text-xs text-slate-500'>Sin registros para este segmento.</span>";
+        document.getElementById("svgNmsRevenueContainer").innerHTML = "<span class='text-xs text-slate-500'>Sin registros para este segmento.</span>";
+        document.getElementById("surveyTableBody").innerHTML = "";
+        return;
+      }
+
+      const grid = [];
+      for (let p = 200; p <= 2000; p += 25) grid.push(p);
+
+      const fTC = [], fC = [], fNotC = [], fE = [], fNotE = [], fTE = [], mrrCurve = [];
+
+      for (const p of grid) {
+        let cTC = 0, cC = 0, cE = 0, cTE = 0, sumProb = 0;
+        for (const r of filtered) {
+          if (r.tooCheap >= p) cTC++;
+          if (r.cheap >= p) cC++;
+          if (r.expensive <= p) cE++;
+          if (r.tooExpensive <= p) cTE++;
+
+          const pCheap = PROBABILITY_WEIGHTS[r.nmsCheap] || 0.5;
+          const pExp = PROBABILITY_WEIGHTS[r.nmsExpensive] || 0.3;
+          let q = 0;
+          if (p > r.tooCheap && p <= r.cheap) q = ((p - r.tooCheap) / (r.cheap - r.tooCheap)) * pCheap;
+          else if (p > r.cheap && p <= r.expensive) q = pCheap + ((p - r.cheap) / (r.expensive - r.cheap)) * (pExp - pCheap);
+          else if (p > r.expensive && p < r.tooExpensive) q = pExp * (1 - (p - r.expensive) / (r.tooExpensive - r.expensive));
+          sumProb += Math.max(0, q);
+        }
+        fTC.push((cTC / N) * 100);
+        fC.push((cC / N) * 100);
+        fNotC.push(100 - (cC / N) * 100);
+        fE.push((cE / N) * 100);
+        fNotE.push(100 - (cE / N) * 100);
+        fTE.push((cTE / N) * 100);
+        mrrCurve.push(Math.round(p * sumProb));
+      }
+
+      const pmc = intersect(grid, fTC, fNotC);
+      const pme = intersect(grid, fTE, fNotE);
+      const opp = intersect(grid, fTC, fTE);
+      const ipp = intersect(grid, fC, fE);
+
+      let maxIdx = 0;
+      for (let i = 1; i < mrrCurve.length; i++) {
+        if (mrrCurve[i] > mrrCurve[maxIdx]) maxIdx = i;
+      }
+
+      document.getElementById("kpiPmc").textContent = `$${pmc} / mes`;
+      document.getElementById("kpiOpp").textContent = `$${opp} / mes`;
+      document.getElementById("kpiIpp").textContent = `$${ipp} / mes`;
+      document.getElementById("kpiPme").textContent = `$${pme} / mes`;
+      document.getElementById("lblRapRange").textContent = `$${pmc} – $${pme} / mes`;
+      document.getElementById("kpiNmsOptPrice").textContent = `$${grid[maxIdx]} / mes`;
+      document.getElementById("kpiNmsOptMrr").textContent = `Ingreso Mensual Estimado: $${mrrCurve[maxIdx].toLocaleString("en-US")} / mes`;
+
+      const annualRevenue = Math.round(grid[maxIdx] * N * 12);
+      document.getElementById("lblCapPrice").textContent = grid[maxIdx];
+      document.getElementById("lblCapAnnual").textContent = annualRevenue.toLocaleString("en-US");
+
+      const w = 520, h = 220, padL = 40, padR = 20, padT = 15, padB = 30;
+      const xPos = (p) => padL + ((p - 200) / 1800) * (w - padL - padR);
+      const yPos = (pct) => padT + ((100 - pct) / 100) * (h - padT - padB);
+      const toPoly = (arr) => grid.map((p, idx) => `${xPos(p).toFixed(1)},${yPos(arr[idx]).toFixed(1)}`).join(" ");
+
+      const rapX1 = xPos(pmc), rapX2 = xPos(pme);
+
+      document.getElementById("svgVanWestendorpContainer").innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" class="w-full h-full">
+          <rect x="${rapX1}" y="${padT}" width="${Math.max(0, rapX2 - rapX1)}" height="${h - padT - padB}" fill="#008ecb" fill-opacity="0.12" />
+          <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" stroke="#94a3b8" />
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h - padB}" stroke="#94a3b8" />
+          <polyline fill="none" stroke="#0ea5e9" stroke-width="2.2" points="${toPoly(fTC)}" />
+          <polyline fill="none" stroke="#059669" stroke-width="2.2" points="${toPoly(fC)}" />
+          <polyline fill="none" stroke="#f59e0b" stroke-width="2.2" points="${toPoly(fE)}" />
+          <polyline fill="none" stroke="#e11d48" stroke-width="2.2" points="${toPoly(fTE)}" />
+          <line x1="${xPos(opp)}" y1="${padT}" x2="${xPos(opp)}" y2="${h - padB}" stroke="#094174" stroke-dasharray="4 3" />
+          <text x="${xPos(opp)}" y="${padT + 10}" text-anchor="middle" font-size="9" font-weight="bold" fill="#094174">OPP $${opp}</text>
+          <text x="${padL}" y="${h - 8}" font-size="9" fill="#64748b">$200</text>
+          <text x="${w / 2}" y="${h - 8}" text-anchor="middle" font-size="9" fill="#64748b">Rango Aceptable [$${pmc} a $${pme}]</text>
+          <text x="${w - padR}" y="${h - 8}" text-anchor="end" font-size="9" fill="#64748b">$2,000</text>
+        </svg>
+      `;
+
+      const maxMrr = Math.max(...mrrCurve, 100);
+      const yRev = (val) => padT + ((maxMrr - val) / maxMrr) * (h - padT - padB);
+      const revPoly = grid.map((p, idx) => `${xPos(p).toFixed(1)},${yRev(mrrCurve[idx]).toFixed(1)}`).join(" ");
+
+      document.getElementById("svgNmsRevenueContainer").innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" class="w-full h-full">
+          <rect x="${rapX1}" y="${padT}" width="${Math.max(0, rapX2 - rapX1)}" height="${h - padT - padB}" fill="#10b981" fill-opacity="0.10" />
+          <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" stroke="#94a3b8" />
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h - padB}" stroke="#94a3b8" />
+          <polyline fill="none" stroke="#059669" stroke-width="2.6" points="${revPoly}" />
+          <circle cx="${xPos(grid[maxIdx])}" cy="${yRev(mrrCurve[maxIdx])}" r="4.5" fill="#059669" />
+          <text x="${xPos(grid[maxIdx])}" y="${yRev(mrrCurve[maxIdx]) - 8}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#065f46">
+            Máx Ingreso: $${grid[maxIdx]} / mes ($${mrrCurve[maxIdx].toLocaleString("en-US")})
+          </text>
+          <text x="${padL}" y="${h - 8}" font-size="9" fill="#64748b">$200</text>
+          <text x="${w / 2}" y="${h - 8}" text-anchor="middle" font-size="9" fill="#64748b">Tarifa Mensual (USD)</text>
+          <text x="${w - padR}" y="${h - 8}" text-anchor="end" font-size="9" fill="#64748b">$2,000</text>
+        </svg>
+      `;
+
+      const tbody = document.getElementById("surveyTableBody");
+      tbody.innerHTML = filtered.map((r, i) => `
+        <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'} hover:bg-sky-50/50">
+          <td class="py-2 px-3 font-semibold text-slate-500">${i + 1}</td>
+          <td class="py-2 px-3 font-bold text-[#094174]">${escapeHtml(r.alias)}</td>
+          <td class="py-2 px-3 text-slate-700">${escapeHtml(r.contact)}</td>
+          <td class="py-2 px-3 text-slate-600">${escapeHtml(r.segment)}</td>
+          <td class="py-2 px-3 text-right font-mono">$${r.tooCheap}</td>
+          <td class="py-2 px-3 text-right font-mono font-semibold text-emerald-700">$${r.cheap}</td>
+          <td class="py-2 px-3 text-right font-mono font-semibold text-amber-700">$${r.expensive}</td>
+          <td class="py-2 px-3 text-right font-mono text-rose-700">$${r.tooExpensive}</td>
+          <td class="py-2 px-3 text-center font-mono">${r.nmsCheap} / ${r.nmsExpensive}</td>
+          <td class="py-2 px-3 text-center">${r.s3 ? '<span class="text-emerald-700 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>'}</td>
+          <td class="py-2 px-3 text-center">${r.tablero ? '<span class="text-emerald-700 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>'}</td>
+          <td class="py-2 px-3 text-center">${r.sdk ? '<span class="text-emerald-700 font-bold">Sí</span>' : '<span class="text-slate-400">No</span>'}</td>
+          <td class="py-2 px-3 text-[11px] text-slate-600 max-w-xs">
+            ${(r.priorityDatasets && r.priorityDatasets.length) ? `<div class="font-semibold text-[#094174]">${escapeHtml(r.priorityDatasets.join(", "))}</div>` : ''}
+            ${r.qualitativeNotes ? `<div class="text-slate-500 italic mt-0.5">${escapeHtml(r.qualitativeNotes)}</div>` : ''}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function fetchAdminServices() {
+      const res = await fetch("/api/v1/admin/services", { credentials: "same-origin" });
+      if (!res.ok) return;
+      const data = await res.json();
+      catalogServices = data.services || [];
+      renderServicesTable();
+    }
+
+    function renderServicesTable() {
+      const tbody = document.getElementById("servicesTableBody");
+      tbody.innerHTML = catalogServices.map((s, i) => `
+        <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'} hover:bg-sky-50/50">
+          <td class="py-2 px-3 font-mono font-semibold text-slate-700">${escapeHtml(s.code)}</td>
+          <td class="py-2 px-3">
+            <div class="font-bold text-[#094174]">${escapeHtml(s.name)}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(s.description)}</div>
+          </td>
+          <td class="py-2 px-3 text-right font-mono">$${Number(s.setupFeeUsd).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+          <td class="py-2 px-3 text-right font-mono">$${Number(s.monthlyFeeUsd).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+          <td class="py-2 px-3 text-center">
+            ${s.isActive
+              ? '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Activo</span>'
+              : '<span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-semibold">Inactivo</span>'}
+          </td>
+          <td class="py-2 px-3 text-right space-x-1 whitespace-nowrap">
+            <button onclick="editService('${s.id}')" class="px-2.5 py-1 rounded border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold">Editar</button>
+            <button onclick="deleteService('${s.id}')" class="px-2.5 py-1 rounded border border-rose-200 hover:bg-rose-50 text-rose-700 font-semibold">Eliminar</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function editService(serviceId) {
+      const s = catalogServices.find(x => x.id === serviceId);
+      if (!s) return;
+      document.getElementById("srvEditId").value = s.id;
+      document.getElementById("srvCode").value = s.code;
+      document.getElementById("srvName").value = s.name;
+      document.getElementById("srvSetupFee").value = s.setupFeeUsd;
+      document.getElementById("srvMonthlyFee").value = s.monthlyFeeUsd;
+      document.getElementById("srvDesc").value = s.description || "";
+      document.getElementById("srvActive").checked = !!s.isActive;
+      document.getElementById("btnSaveService").textContent = "Actualizar Servicio";
+      document.getElementById("serviceErrorBox").classList.add("hidden");
+    }
+
+    function resetServiceForm() {
+      document.getElementById("srvEditId").value = "";
+      document.getElementById("srvCode").value = "";
+      document.getElementById("srvName").value = "";
+      document.getElementById("srvSetupFee").value = "0";
+      document.getElementById("srvMonthlyFee").value = "0";
+      document.getElementById("srvDesc").value = "";
+      document.getElementById("srvActive").checked = true;
+      document.getElementById("btnSaveService").textContent = "Guardar Servicio";
+      document.getElementById("serviceErrorBox").classList.add("hidden");
+    }
+
+    async function saveService(event) {
+      event.preventDefault();
+      const errBox = document.getElementById("serviceErrorBox");
+      errBox.classList.add("hidden");
+
+      const editId = document.getElementById("srvEditId").value.trim();
+      const payload = {
+        code: document.getElementById("srvCode").value.trim(),
+        name: document.getElementById("srvName").value.trim(),
+        setupFeeUsd: Number(document.getElementById("srvSetupFee").value),
+        monthlyFeeUsd: Number(document.getElementById("srvMonthlyFee").value),
+        isActive: document.getElementById("srvActive").checked,
+        description: document.getElementById("srvDesc").value.trim()
+      };
+
+      const url = editId ? `/api/v1/admin/services/${encodeURIComponent(editId)}` : "/api/v1/admin/services";
+      const method = editId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        errBox.textContent = data.detail || "No se pudo guardar el servicio.";
+        errBox.classList.remove("hidden");
+        return;
+      }
+
+      resetServiceForm();
+      await fetchAdminServices();
+    }
+
+    async function deleteService(serviceId) {
+      if (!confirm("¿Eliminar este servicio complementario del catálogo?")) return;
+      const res = await fetch(`/api/v1/admin/services/${encodeURIComponent(serviceId)}`, {
+        method: "DELETE",
+        credentials: "same-origin"
+      });
+      if (res.ok) {
+        await fetchAdminServices();
+      }
+    }
+  </script>
+</body>
+</html>

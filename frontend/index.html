@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Latinex Data Hub: Encuesta de Disposición a Pagar e Inteligencia de Precios</title>
+  <link rel="icon" type="image/png" href="./src/assets/logolatinex.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background-color: #f4f7fa;
+      color: #1a1a1a;
+    }
+    .latinex-nav {
+      background-color: #09355e;
+    }
+    .nav-link {
+      color: #e2e8f0;
+      font-size: 0.90rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      transition: all 0.15s ease;
+    }
+    .nav-link.active {
+      color: #ffffff;
+      background-color: rgba(0, 142, 203, 0.35);
+      box-shadow: inset 0 -2px 0 #008ecb;
+    }
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    button:focus-visible {
+      outline: 3px solid #008ecb;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- HEADER INSTITUCIONAL LATINEX -->
+  <header class="latinex-nav text-white shadow-md border-b-2 border-[#37a7e6]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 sm:h-[110px] flex items-center justify-between gap-3">
+      <div class="flex items-center gap-4 sm:gap-7 min-w-0">
+        <a href="#" class="flex items-center gap-2.5 sm:gap-3 select-none shrink-0" onclick="return false;">
+          <img src="./src/assets/logolatinex-header.png" alt="Latinex — Bolsa Latinoamericana de Valores" class="h-12 sm:h-[72px] w-auto object-contain block" />
+          <span class="hidden sm:inline-block text-xs font-medium text-sky-300 border-l border-sky-400/30 pl-3">Data Hub</span>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-1" aria-label="Navegación principal">
+          <span id="navTabWizard" class="nav-link active">
+            Evaluación Tarifaria
+          </span>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs shrink-0">
+        <div class="text-right">
+          <div id="headerUserLabel" class="font-semibold text-white">Evaluador Institucional</div>
+          <div id="headerRoleLabel" class="text-sky-300 text-[11px]">Sesión Confidencial</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-8">
+
+    <section id="viewClientWizard" class="space-y-5 sm:space-y-6">
+
+      <!-- Banner de Introducción -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        <div class="text-xs font-bold uppercase tracking-wider text-[#008ECB]">
+          Consulta Oficial de Sensibilidad de Precios · Latinex Data Hub
+        </div>
+        <h1 class="text-lg sm:text-xl font-bold text-[#094174] mt-1">
+          Evaluación Institucional del Servicio de Datos de Mercado
+        </h1>
+        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+          Esta consulta de 5 pasos permite estimar el valor operativo y la estructura tarifaria más adecuada para su entidad.
+          Tiempo estimado: 3 a 4 minutos. Todas las respuestas son confidenciales.
+        </p>
+      </div>
+
+      <!-- Tarjeta del Wizard -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+        <!-- Indicador compacto en móvil -->
+        <div class="sm:hidden bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between text-xs">
+          <span id="mobileStepLabel" class="font-bold text-[#094174]">Paso 1 de 5 · Introducción</span>
+          <span id="mobileStepPct" class="font-mono font-semibold text-[#008ECB]">20%</span>
+        </div>
+
+        <!-- Barra de Progreso de 5 Pasos (Desktop/Tablet) -->
+        <nav aria-label="Progreso de la encuesta" class="hidden sm:grid bg-slate-50 px-6 py-3.5 border-b border-slate-200 grid-cols-5 gap-2 text-xs">
+          <button type="button" onclick="tryGoToStep(1)" id="stepBtn1" aria-current="step" class="text-left px-3 py-2 rounded font-semibold bg-[#094174] text-white transition">
+            1. Introducción
+          </button>
+          <button type="button" onclick="tryGoToStep(2)" id="stepBtn2" disabled aria-disabled="true" class="text-left px-3 py-2 rounded font-medium text-slate-500 cursor-not-allowed transition">
+            2. Perfil Institucional
+          </button>
+          <button type="button" onclick="tryGoToStep(3)" id="stepBtn3" disabled aria-disabled="true" class="text-left px-3 py-2 rounded font-medium text-slate-500 cursor-not-allowed transition">
+            3. Valor de la Solución
+          </button>
+          <button type="button" onclick="tryGoToStep(4)" id="stepBtn4" disabled aria-disabled="true" class="text-left px-3 py-2 rounded font-medium text-slate-500 cursor-not-allowed transition">
+            4. Umbrales de Precio
+          </button>
+          <button type="button" onclick="tryGoToStep(5)" id="stepBtn5" disabled aria-disabled="true" class="text-left px-3 py-2 rounded font-medium text-slate-500 cursor-not-allowed transition">
+            5. Adopción y Servicios
+          </button>
+        </nav>
+
+        <div class="p-4 sm:p-6">
+
+          <!-- PASO 1: INTRODUCCIÓN Y CONTEXTO ESTRATÉGICO -->
+          <div id="wizardStep1" class="space-y-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-[#008ECB]">
+                Iniciativa de Infraestructura Tecnológica de Mercado
+              </span>
+              <h2 id="stepHeading1" tabindex="-1" class="text-lg font-bold text-[#094174] mt-0.5 outline-none">
+                Modernización, Sostenibilidad y Competitividad del Ecosistema Bursátil
+              </h2>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+              <div class="p-4 bg-[#EAF1F6] border-l-4 border-[#094174] rounded-r-lg space-y-1.5">
+                <div class="font-bold text-[#094174] text-sm">
+                  Información bursátil oficial sin fricciones manuales
+                </div>
+                <p>
+                  El <strong>Latinex Data Hub</strong> permite a puestos de bolsa, bancos, administradores de inversión y custodios acceder de forma directa, automatizada y auditable a los datos oficiales de Latinex vía API (en Power BI, en sus herramientas de dashboard predilectas o directamente en sus sistemas internos), eliminando la extracción y manipulación manual de boletines y PDFs.
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-white rounded-lg border border-slate-200 space-y-1.5">
+                  <div class="font-bold text-[#094174] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[#008ECB]"></span>
+                    <span>Sostenibilidad y Respaldo Institucional</span>
+                  </div>
+                  <p class="text-slate-600">
+                    Mantener una infraestructura de datos de misión crítica requiere inversión continua en disponibilidad, ciberseguridad, soporte técnico ágil y evolución de datasets. Su evaluación ayuda a definir un esquema sostenible para toda la plaza.
+                  </p>
+                </div>
+
+                <div class="p-4 bg-white rounded-lg border border-slate-200 space-y-1.5">
+                  <div class="font-bold text-[#094174] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>Confidencialidad y Propósito</span>
+                  </div>
+                  <p class="text-slate-600">
+                    Sus respuestas son estrictamente confidenciales y se consolidan estadísticamente para alinear la tarifa del servicio con el valor operativo real que genera en su institución.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button type="button" onclick="completeStep1()" class="w-full sm:w-auto bg-[#094174] hover:bg-[#008ECB] text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow transition">
+                Comenzar Evaluación: Perfil Institucional →
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 2: PERFIL INSTITUCIONAL Y DATASETS PRIORITARIOS -->
+          <div id="wizardStep2" class="hidden space-y-5">
+            <h2 id="stepHeading2" tabindex="-1" class="text-base font-bold text-[#094174] outline-none">
+              Paso 2 de 5: Identificación Institucional, Esfuerzo Operativo y Datasets
+            </h2>
+
+            <div id="step2ErrorBox" role="alert" aria-live="polite" class="hidden bg-red-50 border-l-4 border-red-600 p-3 rounded text-xs text-red-900 font-medium"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label for="inpOrg" class="block text-xs font-semibold text-slate-700 mb-1">
+                  Institución Financiera <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <input id="inpOrg" name="alias" type="text" required aria-describedby="errInpOrg" placeholder="Ej. Banco / Puesto de Bolsa" oninput="clearFieldError('inpOrg', 'errInpOrg')" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:ring-2 focus:ring-[#008ECB]" />
+                <p id="errInpOrg" class="hidden text-[11px] text-rose-700 mt-1 font-medium">Ingrese el nombre de su institución.</p>
+              </div>
+              <div>
+                <label for="inpContact" class="block text-xs font-semibold text-slate-700 mb-1">
+                  Contacto / Cargo del Evaluador <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <input id="inpContact" name="contact" type="text" required aria-describedby="errInpContact" placeholder="Ej. Gerente de Tesorería / Operaciones" oninput="clearFieldError('inpContact', 'errInpContact')" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:ring-2 focus:ring-[#008ECB]" />
+                <p id="errInpContact" class="hidden text-[11px] text-rose-700 mt-1 font-medium">Ingrese su cargo o contacto.</p>
+              </div>
+              <div>
+                <label for="inpSegment" class="block text-xs font-semibold text-slate-700 mb-1">Segmento del Mercado</label>
+                <select id="inpSegment" name="segment" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm bg-white focus:ring-2 focus:ring-[#008ECB]">
+                  <option value="Puesto de Bolsa / Casa de Valores">Puesto de Bolsa / Casa de Valores</option>
+                  <option value="Banco / Puesto de Bolsa Integrado">Banco / Puesto de Bolsa Integrado</option>
+                  <option value="Banco Comercial / Tesorería">Banco Comercial / Tesorería</option>
+                  <option value="Wealth Management / Gestor de Inversiones">Wealth Management / Gestor de Inversiones</option>
+                  <option value="Proveedor Financiero / Calificadora / Otro">Proveedor Financiero / Calificadora / Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="bg-[#EAF1F6]/70 border-l-4 border-[#008ECB] rounded-r-lg p-3.5 text-xs text-slate-700 leading-relaxed">
+              <strong class="text-[#094174]">¿Por qué estimamos horas-hombre y costo por hora?</strong>
+              Indique una estimación aproximada de cuántas horas-hombre dedica mensualmente su equipo o departamento a tareas manuales de obtención, limpieza y manipulación de datos de Latinex, junto con el costo hora estimado de ese personal. Esto permite dimensionar cuánto le cuesta hoy en dinero a su área esa extracción manual frente a consumir los datos directamente vía API.
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+              <div>
+                <label for="inpRoleCategory" class="block text-xs font-semibold text-slate-700 mb-1">
+                  Rol del Tomador de Decisión
+                </label>
+                <select id="inpRoleCategory" name="roleCategory" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm bg-white focus:ring-2 focus:ring-[#008ECB]">
+                  <option value="Decisor Comercial / Mesa de Dinero / Dirección">Decisor Comercial, Mesa de Dinero o Dirección</option>
+                  <option value="Decisor Técnico / TI / Arquitectura e Integración">Decisor Técnico, TI, Arquitectura o Integración</option>
+                  <option value="Operaciones / Back-Office / Liquidaciones">Operaciones, Back-Office o Liquidaciones</option>
+                  <option value="Riesgos / Cumplimiento / Tesorería">Riesgos, Cumplimiento o Tesorería</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </div>
+              <div>
+                <label for="inpHours" class="block text-xs font-semibold text-slate-700 mb-1">
+                  Horas-Hombre Mensuales Manuales
+                </label>
+                <input id="inpHours" name="manualHours" type="number" inputmode="numeric" value="46" min="0" max="500" oninput="recalcIntrinsicValue()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:ring-2 focus:ring-[#008ECB]" />
+                <p class="text-[11px] text-slate-500 mt-1">Horas al mes de su equipo en obtención y manipulación manual de datos.</p>
+              </div>
+              <div>
+                <label for="inpRate" class="block text-xs font-semibold text-slate-700 mb-1">
+                  Costo Hora Estimado de Personal (USD / hr)
+                </label>
+                <input id="inpRate" name="hourlyRate" type="number" inputmode="numeric" value="25" min="0" max="500" oninput="recalcIntrinsicValue()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:ring-2 focus:ring-[#008ECB] font-semibold text-[#094174]" />
+                <p class="text-[11px] text-slate-500 mt-1">Costo por hora aproximado del área para estimar el gasto mensual actual.</p>
+              </div>
+            </div>
+
+            <!-- Estimación de Ahorro Operativo -->
+            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <span class="font-bold text-[#094174]">Ahorro Operativo Directo Estimado:</span>
+                <span class="text-slate-600 ml-1">
+                  Calculado como <span id="lblDisplayHours" class="font-semibold text-slate-800">46</span> horas mensuales × $<span id="lblDisplayRate" class="font-semibold text-slate-800">25</span> / hr.
+                </span>
+              </div>
+              <div id="lblIntrinsicSavings" class="text-base font-bold text-emerald-700">~$1,150.00 USD / mes</div>
+            </div>
+
+            <!-- Datasets Prioritarios -->
+            <fieldset class="bg-[#EAF1F6]/60 border border-slate-200 rounded-lg p-4 space-y-2.5">
+              <legend class="text-xs font-bold text-[#094174] px-1">
+                ¿Qué conjuntos de datos de Latinex son prioritarios para su operación? (Opcional)
+              </legend>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                <label class="flex items-center gap-2 p-2.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" value="Precios de Cierre" class="chk-priority-dataset accent-[#094174] w-4 h-4" />
+                  <span class="font-medium text-slate-800">Precios de Cierre</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" value="Transacciones / Boletas" class="chk-priority-dataset accent-[#094174] w-4 h-4" />
+                  <span class="font-medium text-slate-800">Transacciones / Boletas</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" value="Renta Fija y Cupones" class="chk-priority-dataset accent-[#094174] w-4 h-4" />
+                  <span class="font-medium text-slate-800">Renta Fija y Cupones</span>
+                </label>
+                <label class="flex items-center gap-2 p-2.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50">
+                  <input type="checkbox" value="Libro de Ofertas" class="chk-priority-dataset accent-[#094174] w-4 h-4" />
+                  <span class="font-medium text-slate-800">Libro de Ofertas</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="flex justify-between pt-2 gap-3">
+              <button type="button" onclick="goToStep(1)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">
+                ← Paso Anterior
+              </button>
+              <button type="button" onclick="completeStep2()" class="bg-[#094174] hover:bg-[#008ECB] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">
+                Siguiente: Valor de la Solución →
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 3: VALOR DE LA SOLUCIÓN (TABS INTERACTIVOS + VISTA PREVIA SIN PEDIR ACCESO) -->
+          <div id="wizardStep3" class="hidden space-y-5">
+            <div>
+              <h2 id="stepHeading3" tabindex="-1" class="text-base font-bold text-[#094174] outline-none">
+                Paso 3 de 5: ¿Cómo funciona Latinex Data Hub en su institución?
+              </h2>
+              <p class="text-xs text-slate-600 mt-1">
+                Explore brevemente los 3 escenarios de uso (sin necesidad de solicitar acceso al portal) antes de evaluar tarifas.
+              </p>
+            </div>
+
+            <!-- Tabs Accesibles por Caso de Uso -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+              <div role="tablist" aria-label="Escenarios de uso de Latinex Data Hub" class="grid grid-cols-1 sm:grid-cols-3 bg-slate-100 border-b border-slate-200">
+                <button
+                  type="button"
+                  role="tab"
+                  id="tabBtnBI"
+                  aria-selected="true"
+                  aria-controls="tabPanelBI"
+                  onclick="selectValueTab('BI')"
+                  onkeydown="handleTabKeydown(event, 0)"
+                  class="px-4 py-3 text-left text-xs font-bold border-b-2 border-[#094174] bg-white text-[#094174] transition"
+                >
+                  1. Power BI y Dashboards
+                  <span class="block text-[11px] font-normal text-slate-500 mt-0.5">Para analítica visual y tableros interactivos</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="tabBtnM2M"
+                  aria-selected="false"
+                  aria-controls="tabPanelM2M"
+                  tabindex="-1"
+                  onclick="selectValueTab('M2M')"
+                  onkeydown="handleTabKeydown(event, 1)"
+                  class="px-4 py-3 text-left text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:bg-slate-50 transition"
+                >
+                  2. Sistemas / Core M2M y Python
+                  <span class="block text-[11px] font-normal text-slate-500 mt-0.5">Integración vía API y recetas listas para Python</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="tabBtnControl"
+                  aria-selected="false"
+                  aria-controls="tabPanelControl"
+                  tabindex="-1"
+                  onclick="selectValueTab('Control')"
+                  onkeydown="handleTabKeydown(event, 2)"
+                  class="px-4 py-3 text-left text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:bg-slate-50 transition"
+                >
+                  3. Control y Aceleradores
+                  <span class="block text-[11px] font-normal text-slate-500 mt-0.5">Consola web y tableros interactivos</span>
+                </button>
+              </div>
+
+              <!-- Panel 1: Power BI y Dashboards -->
+              <div id="tabPanelBI" role="tabpanel" aria-labelledby="tabBtnBI" class="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-5 items-center">
+                <div class="space-y-3 text-xs">
+                  <div class="inline-block bg-[#EAF1F6] text-[#094174] font-bold px-2.5 py-1 rounded">
+                    Datos vía API en Power BI o su dashboard predilecto
+                  </div>
+                  <ul class="space-y-2 text-slate-700">
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Precios oficiales de cierre diarios:</strong> histórico desde 2016 listo para consumir vía API desde Power BI o su herramienta de dashboard predilecta.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Renta fija y cupones:</strong> más de 10,000 emisiones con tasas, vencimientos y calendario de pagos vigente para alimentar tableros interactivos.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Fuente primaria auditable:</strong> datos estructurados directamente desde Latinex para Back-Office, Riesgos y Tesorería sin manipulación manual.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Mini Vista Previa Simulada Power BI / Dashboard -->
+                <div class="rounded-lg border border-slate-300 overflow-hidden shadow-sm bg-slate-50 text-[11px]">
+                  <div class="bg-[#094174] text-white px-3 py-1.5 font-semibold flex items-center justify-between">
+                    <span>Vista previa · Conexión API en Power BI / Dashboard Interactivo</span>
+                    <span class="text-sky-200 font-mono text-[10px]">Actualización API</span>
+                  </div>
+                  <div class="overflow-x-auto bg-white">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                          <th class="py-1.5 px-2.5 font-semibold">ticker</th>
+                          <th class="py-1.5 px-2.5 font-semibold">issuer</th>
+                          <th class="py-1.5 px-2.5 font-semibold">summary_date</th>
+                          <th class="py-1.5 px-2.5 font-semibold text-right">close_price</th>
+                          <th class="py-1.5 px-2.5 font-semibold text-center">currency</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 font-mono text-[10px]">
+                        <tr>
+                          <td class="py-1.5 px-2.5 text-[#094174] font-semibold">TESORO-PAN-2030</td>
+                          <td class="py-1.5 px-2.5 font-sans text-slate-700">Tesoro Nacional de Panamá</td>
+                          <td class="py-1.5 px-2.5 text-slate-600 preview-today-date"></td>
+                          <td class="py-1.5 px-2.5 text-right text-emerald-700 font-bold">100.25</td>
+                          <td class="py-1.5 px-2.5 text-center">USD</td>
+                        </tr>
+                        <tr class="bg-slate-50/70">
+                          <td class="py-1.5 px-2.5 text-[#094174] font-semibold">TESORO-PAN-2035</td>
+                          <td class="py-1.5 px-2.5 font-sans text-slate-700">Tesoro Nacional de Panamá</td>
+                          <td class="py-1.5 px-2.5 text-slate-600 preview-today-date"></td>
+                          <td class="py-1.5 px-2.5 text-right text-emerald-700 font-bold">98.75</td>
+                          <td class="py-1.5 px-2.5 text-center">USD</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel 2: Sistemas / Core M2M -->
+              <div id="tabPanelM2M" role="tabpanel" aria-labelledby="tabBtnM2M" class="hidden p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-2 gap-5 items-center">
+                <div class="space-y-3 text-xs">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="inline-block bg-[#EAF1F6] text-[#094174] font-bold px-2.5 py-1 rounded">
+                      Integración automática servidor a servidor y Python
+                    </span>
+                    <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-600 cursor-pointer">
+                      <input id="chkShowTechRoutes" type="checkbox" onchange="toggleTechRoutes(this.checked)" class="accent-[#094174]" />
+                      <span>Ver rutas API</span>
+                    </label>
+                  </div>
+                  <ul class="space-y-2 text-slate-700">
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Boletas, transacciones y libro de ofertas:</strong> alimentación diaria automatizada vía API hacia su Core, PMS o modelo de riesgos.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Recetas listas para Python y OAuth 2.0 (JWT M2M):</strong> ejemplos ejecutables listos para copiar y credenciales renovables sin llaves estáticas.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <span class="text-emerald-600 font-bold">✓</span>
+                      <span><strong>Catálogo Discovery:</strong> identifique por emisor qué instrumentos tienen precios u ofertas disponibles antes de consultar.</span>
+                    </li>
+                  </ul>
+                  <div id="techRoutesBadge" class="hidden p-2.5 rounded bg-slate-100 border border-slate-200 font-mono text-[10px] text-[#094174]">
+                    GET /v1/prices · /v1/trades · /v1/instruments/search · /v1/market/offers · /v1/discovery
+                  </div>
+                </div>
+
+                <!-- Mini Vista Previa JSON -->
+                <div class="rounded-lg border border-slate-800 overflow-hidden shadow-sm bg-slate-900 text-slate-100 text-[11px]">
+                  <div class="bg-slate-800 px-3 py-1.5 font-mono text-[10px] text-sky-300 flex justify-between">
+                    <span>GET /v1/instruments/search?symbol=TESORO-PAN-2030</span>
+                    <span class="text-emerald-400">200 OK</span>
+                  </div>
+                  <pre class="p-3 font-mono text-[10px] leading-relaxed overflow-x-auto text-slate-200">{
+  "data": [{
+    "isin": "PA0000000001",
+    "ticker": "TESORO-PAN-2030",
+    "issuer": "Tesoro Nacional de Panamá",
+    "rate": 5.25,
+    "frequency_desc": "Semestral",
+    "currency": "USD"
+  }]
+}</pre>
+                </div>
+              </div>
+
+              <!-- Panel 3: Control y Aceleradores -->
+              <div id="tabPanelControl" role="tabpanel" aria-labelledby="tabBtnControl" class="hidden p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="p-4 rounded-lg border border-slate-200 bg-slate-50 space-y-2">
+                  <div class="font-bold text-[#094174] text-sm">Consola Web de Autogestión (Incluida)</div>
+                  <ul class="space-y-1.5 text-slate-700">
+                    <li>• <strong>Monitoreo en tiempo real:</strong> visibilidad de consumo por área y límites mensuales.</li>
+                    <li>• <strong>Gestión de credenciales y roles:</strong> rotación inmediata de accesos M2M para su equipo.</li>
+                    <li>• <strong>Sandbox y recetas listas:</strong> plantillas copiables para <strong>Python</strong> y conexión directa a <strong>Power BI / dashboards interactivos</strong>.</li>
+                  </ul>
+                </div>
+                <div class="p-4 rounded-lg border border-emerald-200 bg-emerald-50/50 space-y-2">
+                  <div class="font-bold text-emerald-900 text-sm">Aceleradores Opcionales (Si TI está saturado)</div>
+                  <ul class="space-y-1.5 text-slate-700">
+                    <li>• <strong>Acompañamiento de integración API:</strong> soporte guiado para conectar su ERP, PMS o Core.</li>
+                    <li>• <strong>Dashboards interactivos con marca propia:</strong> tableros visuales personalizados consumiendo las APIs oficiales.</li>
+                    <li>• <strong>Capacitación práctica:</strong> talleres cortos para equipos de analítica (Python / Power BI) y tecnología.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Checkbox de confirmación destacado -->
+            <label for="chkStimulusAck" class="flex items-start gap-3 p-3.5 rounded-lg border-2 border-[#008ECB]/40 bg-[#EAF1F6]/70 text-xs text-slate-800 cursor-pointer hover:border-[#008ECB] transition">
+              <input id="chkStimulusAck" type="checkbox" onchange="toggleStimulusAck(this.checked)" class="mt-0.5 w-4 h-4 accent-[#094174] shrink-0" />
+              <span>
+                <strong>He revisado las capacidades del Latinex Data Hub</strong> para considerarlas al evaluar los niveles de tarifa en el siguiente paso.
+              </span>
+            </label>
+
+            <div class="flex justify-between pt-2 gap-3">
+              <button type="button" onclick="goToStep(2)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">
+                ← Paso Anterior
+              </button>
+              <button type="button" id="btnStep3Next" disabled onclick="completeStep3()" class="bg-[#094174] hover:bg-[#008ECB] disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">
+                Siguiente: Umbrales de Precio →
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 4: UMBRALES DE SENSIBILIDAD DE PRECIOS (CERO SESGO DE ANCLAJE) -->
+          <div id="wizardStep4" class="hidden space-y-5">
+            <div>
+              <h2 id="stepHeading4" tabindex="-1" class="text-base font-bold text-[#094174] outline-none">
+                Paso 4 de 5: Evaluación de Niveles de Tarifa Mensual (USD / mes)
+              </h2>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                Considerando el valor operativo y las capacidades revisadas para su institución, indique cuatro montos mensuales en <strong>USD / mes</strong> en orden ascendente:
+                <span class="inline-flex flex-wrap items-center gap-1 mt-1">
+                  <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[#094174] font-bold whitespace-nowrap">Sospechosamente Baja</code>
+                  <span>&lt;</span>
+                  <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[#094174] font-bold whitespace-nowrap">Atractiva</code>
+                  <span>&lt;</span>
+                  <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[#094174] font-bold whitespace-nowrap">Elevada</code>
+                  <span>&lt;</span>
+                  <code class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[#094174] font-bold whitespace-nowrap">Prohibitiva</code>.
+                </span>
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/70">
+                <label for="inpTooCheap" class="block text-xs font-bold text-sky-900 mb-1">
+                  1. Tarifa SOSPECHOSAMENTE BAJA (USD / mes) <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mb-2">
+                  ¿Por debajo de qué monto mensual consideraría que la tarifa es tan baja que le generaría dudas sobre la calidad, soporte o respaldo institucional del servicio?
+                </p>
+                <input id="inpTooCheap" type="number" inputmode="decimal" min="1" required placeholder="Monto en USD / mes" onblur="handleThresholdBlur('inpTooCheap')" oninput="handleThresholdInput('inpTooCheap')" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-sm font-semibold bg-white" />
+              </div>
+
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/70">
+                <label for="inpCheap" class="block text-xs font-bold text-emerald-900 mb-1">
+                  2. Tarifa ATRACTIVA / EXCELENTE VALOR (USD / mes) <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mb-2">
+                  ¿A qué tarifa mensual consideraría que el servicio ofrece una excelente relación costo-beneficio frente al ahorro operativo que genera?
+                </p>
+                <input id="inpCheap" type="number" inputmode="decimal" min="1" required placeholder="Monto en USD / mes" onblur="handleThresholdBlur('inpCheap')" oninput="handleThresholdInput('inpCheap')" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-sm font-semibold bg-white" />
+              </div>
+
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/70">
+                <label for="inpExpensive" class="block text-xs font-bold text-amber-900 mb-1">
+                  3. Tarifa ELEVADA PERO JUSTIFICABLE (USD / mes) <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mb-2">
+                  ¿A partir de qué tarifa mensual comenzaría a percibirla como elevada, aunque todavía la justificaría por el retorno operativo y control que aporta?
+                </p>
+                <input id="inpExpensive" type="number" inputmode="decimal" min="1" required placeholder="Monto en USD / mes" onblur="handleThresholdBlur('inpExpensive')" oninput="handleThresholdInput('inpExpensive')" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-sm font-semibold bg-white" />
+              </div>
+
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50/70">
+                <label for="inpTooExpensive" class="block text-xs font-bold text-rose-900 mb-1">
+                  4. Tarifa PROHIBITIVA / FUERA DE PRESUPUESTO (USD / mes) <span class="text-rose-600" aria-hidden="true">*</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mb-2">
+                  ¿A partir de qué tarifa mensual descartaría completamente la contratación por exceder el presupuesto o la rentabilidad esperada?
+                </p>
+                <input id="inpTooExpensive" type="number" inputmode="decimal" min="1" required placeholder="Monto en USD / mes" onblur="handleThresholdBlur('inpTooExpensive')" oninput="handleThresholdInput('inpTooExpensive')" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-sm font-semibold bg-white" />
+              </div>
+            </div>
+
+            <!-- Validación en Vivo -->
+            <div id="validationBox" role="status" aria-live="polite" class="bg-slate-100 border-l-4 border-slate-400 p-3.5 rounded text-xs text-slate-700 font-medium">
+              Complete los cuatro montos mensuales en orden ascendente para continuar.
+            </div>
+
+            <div class="flex justify-between pt-2 gap-3">
+              <button type="button" onclick="goToStep(3)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">
+                ← Paso Anterior
+              </button>
+              <button type="button" id="btnStep4Next" disabled onclick="completeStep4()" class="bg-[#094174] hover:bg-[#008ECB] disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">
+                Siguiente: Adopción y Servicios →
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 5: PROBABILIDAD DE COMPRA, SERVICIOS ADICIONALES Y COMENTARIOS -->
+          <div id="wizardStep5" class="hidden space-y-5">
+            <h2 id="stepHeading5" tabindex="-1" class="text-base font-bold text-[#094174] outline-none">
+              Paso 5 de 5: Probabilidad de Adopción y Servicios Complementarios
+            </h2>
+
+            <div id="step5ErrorBox" role="alert" aria-live="polite" class="hidden bg-red-50 border-l-4 border-red-600 p-3 rounded text-xs text-red-900 font-medium"></div>
+
+            <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded border border-slate-200">
+              Para finalizar, indique la probabilidad real de que su institución contrate el servicio en un horizonte de 90 días bajo los dos escenarios intermedios que usted definió.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50">
+                <label for="inpNmsCheap" class="block text-xs font-bold text-[#094174] mb-1">
+                  A. Si la tarifa oficial fuera su Tarifa Atractiva (<span id="lblNmsCheapPrice" class="font-mono text-emerald-700">$0</span> USD / mes):
+                </label>
+                <p class="text-[11px] text-slate-600 mb-3">
+                  ¿Qué tan probable es que su institución contrate el servicio en los próximos 90 días?
+                </p>
+                <select id="inpNmsCheap" onchange="clearStep5Error()" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-xs font-semibold bg-white">
+                  <option value="" disabled selected>Seleccione una opción...</option>
+                  <option value="5">5: Definitivamente SÍ lo contrataría</option>
+                  <option value="4">4: Probablemente SÍ lo contrataría</option>
+                  <option value="3">3: Podría contratarlo o no / Indeciso</option>
+                  <option value="2">2: Probablemente NO lo contrataría</option>
+                  <option value="1">1: Definitivamente NO lo contrataría</option>
+                </select>
+              </div>
+
+              <div class="p-4 rounded-lg border border-slate-200 bg-slate-50">
+                <label for="inpNmsExpensive" class="block text-xs font-bold text-[#094174] mb-1">
+                  B. Si la tarifa oficial fuera su Tarifa Elevada (<span id="lblNmsExpensivePrice" class="font-mono text-amber-700">$0</span> USD / mes):
+                </label>
+                <p class="text-[11px] text-slate-600 mb-3">
+                  ¿Qué tan probable es que su institución aún apruebe su contratación por el beneficio operativo?
+                </p>
+                <select id="inpNmsExpensive" onchange="clearStep5Error()" class="w-full border border-slate-300 rounded px-3 py-2 text-base sm:text-xs font-semibold bg-white">
+                  <option value="" disabled selected>Seleccione una opción...</option>
+                  <option value="5">5: Definitivamente SÍ lo contrataría</option>
+                  <option value="4">4: Probablemente SÍ lo contrataría</option>
+                  <option value="3">3: Podría contratarlo o no / Indeciso</option>
+                  <option value="2">2: Probablemente NO lo contrataría</option>
+                  <option value="1">1: Definitivamente NO lo contrataría</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Servicios Adicionales -->
+            <div class="p-3 sm:p-4 rounded-lg border border-slate-200 bg-[#EAF1F6]/70 space-y-3">
+              <div>
+                <span class="text-xs font-bold text-[#094174]">
+                  Servicios Complementarios Opcionales (Facturación Adicional):
+                </span>
+                <p class="text-[11px] text-slate-600 mt-0.5">
+                  Marque únicamente aquellos aceleradores en los que su institución tendría interés adicional a la suscripción de datos:
+                </p>
+              </div>
+              <div id="containerComplementaryServices" class="space-y-2 text-xs">
+                <!-- Inyectado dinámicamente -->
+              </div>
+            </div>
+
+            <!-- Notas cualitativas opcionales -->
+            <div>
+              <label for="inpQualitativeNotes" class="block text-xs font-bold text-[#094174] mb-1">
+                Comentarios o necesidades específicas de datos / integración (Opcional)
+              </label>
+              <textarea
+                id="inpQualitativeNotes"
+                rows="3"
+                maxlength="2000"
+                placeholder="Ej. Requerimos histórico de precios desde 2018 o entrega diaria antes de las 5:00 p.m."
+                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-base sm:text-xs bg-white focus:ring-2 focus:ring-[#008ECB]"
+              ></textarea>
+            </div>
+
+            <div class="flex justify-between pt-2 gap-3">
+              <button type="button" onclick="goToStep(4)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">
+                ← Paso Anterior
+              </button>
+              <button type="button" id="btnSubmitSurvey" onclick="submitNewSurveyResponse()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow transition">
+                ✓ Enviar Evaluación
+              </button>
+            </div>
+          </div>
+
+          <!-- PANTALLA DE CONFIRMACIÓN PARA EL ENCUESTADO -->
+          <div id="wizardStepDone" class="hidden space-y-5 py-4">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center space-y-2">
+              <div class="text-3xl">✓</div>
+              <h2 class="text-lg font-bold text-emerald-900">Evaluación Registrada Exitosamente</h2>
+              <p class="text-xs text-emerald-800 max-w-xl mx-auto">
+                Muchas gracias por su participación. Sus respuestas han sido incorporadas de forma confidencial al análisis tarifario del <strong>Latinex Data Hub</strong>.
+              </p>
+            </div>
+
+            <div id="respondentSummaryBox" class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs space-y-2">
+              <!-- Resumen de la propia respuesta -->
+            </div>
+
+            <div class="flex flex-wrap justify-between gap-3 pt-2">
+              <button type="button" onclick="resetWizardForNewSurvey()" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50">
+                Iniciar Nueva Evaluación
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let activeServices = [];
+    let maxUnlockedStep = 1;
+    let currentStep = 1;
+    const touchedThresholds = {
+      inpTooCheap: false,
+      inpCheap: false,
+      inpExpensive: false,
+      inpTooExpensive: false
+    };
+
+    const VALUE_TABS = ["BI", "M2M", "Control"];
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const now = new Date();
+      const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      document.querySelectorAll(".preview-today-date").forEach(el => { el.textContent = todayIso; });
+      await loadAndRenderComplementaryServices();
+      recalcIntrinsicValue();
+      updateStepperUI();
+    });
+
+    function selectValueTab(tabName) {
+      VALUE_TABS.forEach(name => {
+        const btn = document.getElementById("tabBtn" + name);
+        const panel = document.getElementById("tabPanel" + name);
+        const selected = name === tabName;
+        btn.setAttribute("aria-selected", selected ? "true" : "false");
+        btn.tabIndex = selected ? 0 : -1;
+        if (selected) {
+          btn.className = "px-4 py-3 text-left text-xs font-bold border-b-2 border-[#094174] bg-white text-[#094174] transition";
+          panel.classList.remove("hidden");
+        } else {
+          btn.className = "px-4 py-3 text-left text-xs font-semibold border-b-2 border-transparent text-slate-600 hover:bg-slate-50 transition";
+          panel.classList.add("hidden");
+        }
+      });
+    }
+
+    function handleTabKeydown(event, idx) {
+      let nextIdx = null;
+      if (event.key === "ArrowRight") nextIdx = (idx + 1) % VALUE_TABS.length;
+      else if (event.key === "ArrowLeft") nextIdx = (idx - 1 + VALUE_TABS.length) % VALUE_TABS.length;
+      if (nextIdx !== null) {
+        event.preventDefault();
+        const nextName = VALUE_TABS[nextIdx];
+        selectValueTab(nextName);
+        document.getElementById("tabBtn" + nextName).focus();
+      }
+    }
+
+    function toggleTechRoutes(checked) {
+      document.getElementById("techRoutesBadge").classList.toggle("hidden", !checked);
+    }
+
+    async function loadAndRenderComplementaryServices() {
+      const container = document.getElementById("containerComplementaryServices");
+      try {
+        const res = await fetch("/api/v1/services");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        activeServices = data.services || [];
+        if (activeServices.length === 0) {
+          container.innerHTML = `<div class="text-xs text-slate-500 p-2">No hay servicios complementarios activos configurados.</div>`;
+          return;
+        }
+        container.innerHTML = activeServices.map(srv => `
+          <label class="flex items-start gap-2.5 p-2.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50">
+            <input type="checkbox" id="chk_${srv.id}" value="${srv.id}" class="mt-0.5 w-4 h-4 accent-[#094174] chk-comp-service shrink-0" />
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center justify-between gap-1.5">
+                <span class="font-bold text-[#094174]">${srv.name}</span>
+                <span class="font-mono text-emerald-700 font-bold">$${Number(srv.setupFeeUsd).toLocaleString("en-US")} Setup ${srv.monthlyFeeUsd > 0 ? '+ $' + Number(srv.monthlyFeeUsd).toLocaleString("en-US") + '/mes adicional' : ''}</span>
+              </div>
+              <div class="text-[11px] text-slate-600 mt-0.5">${srv.description || ""}</div>
+            </div>
+          </label>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div class="text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2.5">No se pudo cargar el catálogo de servicios complementarios desde el servidor.</div>`;
+      }
+    }
+
+    function recalcIntrinsicValue() {
+      const hrs = Number(document.getElementById("inpHours").value) || 0;
+      const rate = Number(document.getElementById("inpRate").value) || 0;
+      const total = Math.round(hrs * rate);
+      document.getElementById("lblDisplayHours").textContent = hrs;
+      document.getElementById("lblDisplayRate").textContent = rate;
+      document.getElementById("lblIntrinsicSavings").textContent = `~$${total.toLocaleString("en-US")}.00 USD / mes`;
+    }
+
+    function toggleStimulusAck(isChecked) {
+      document.getElementById("btnStep3Next").disabled = !isChecked;
+    }
+
+    function tryGoToStep(stepNum) {
+      if (stepNum <= maxUnlockedStep) {
+        goToStep(stepNum);
+      }
+    }
+
+    function completeStep1() {
+      maxUnlockedStep = Math.max(maxUnlockedStep, 2);
+      goToStep(2);
+    }
+
+    function clearFieldError(inputId, errId) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errId);
+      input.removeAttribute("aria-invalid");
+      input.classList.remove("border-red-500", "bg-red-50");
+      input.classList.add("border-slate-300");
+      err.classList.add("hidden");
+    }
+
+    function completeStep2() {
+      const orgEl = document.getElementById("inpOrg");
+      const contactEl = document.getElementById("inpContact");
+      const errBox = document.getElementById("step2ErrorBox");
+      let firstInvalid = null;
+
+      if (!orgEl.value.trim()) {
+        orgEl.setAttribute("aria-invalid", "true");
+        orgEl.classList.add("border-red-500", "bg-red-50");
+        document.getElementById("errInpOrg").classList.remove("hidden");
+        firstInvalid = orgEl;
+      }
+      if (!contactEl.value.trim()) {
+        contactEl.setAttribute("aria-invalid", "true");
+        contactEl.classList.add("border-red-500", "bg-red-50");
+        document.getElementById("errInpContact").classList.remove("hidden");
+        if (!firstInvalid) firstInvalid = contactEl;
+      }
+
+      if (firstInvalid) {
+        errBox.textContent = "Por favor complete los campos obligatorios marcados en rojo para continuar.";
+        errBox.classList.remove("hidden");
+        firstInvalid.focus();
+        return;
+      }
+      errBox.classList.add("hidden");
+      maxUnlockedStep = Math.max(maxUnlockedStep, 3);
+      goToStep(3);
+    }
+
+    function completeStep3() {
+      if (!document.getElementById("chkStimulusAck").checked) return;
+      maxUnlockedStep = Math.max(maxUnlockedStep, 4);
+      goToStep(4);
+    }
+
+    function completeStep4() {
+      Object.keys(touchedThresholds).forEach(k => { touchedThresholds[k] = true; });
+      if (!validateThresholds(true)) return;
+      maxUnlockedStep = Math.max(maxUnlockedStep, 5);
+      goToStep(5);
+    }
+
+    function goToStep(stepNum) {
+      currentStep = stepNum;
+      [1, 2, 3, 4, 5].forEach((n) => {
+        document.getElementById("wizardStep" + n).classList.toggle("hidden", n !== stepNum);
+      });
+      document.getElementById("wizardStepDone").classList.add("hidden");
+      updateStepperUI();
+
+      if (stepNum === 5) {
+        document.getElementById("lblNmsCheapPrice").textContent = "$" + (document.getElementById("inpCheap").value || "0");
+        document.getElementById("lblNmsExpensivePrice").textContent = "$" + (document.getElementById("inpExpensive").value || "0");
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const heading = document.getElementById("stepHeading" + stepNum);
+      if (heading) heading.focus({ preventScroll: true });
+    }
+
+    function updateStepperUI() {
+      const labels = [
+        "1. Introducción",
+        "2. Perfil Institucional",
+        "3. Valor de la Solución",
+        "4. Umbrales de Precio",
+        "5. Adopción y Servicios"
+      ];
+      const mobileNames = ["Introducción", "Perfil Institucional", "Valor de la Solución", "Umbrales de Precio", "Adopción y Servicios"];
+      document.getElementById("mobileStepLabel").textContent = `Paso ${currentStep} de 5 · ${mobileNames[currentStep - 1]}`;
+      document.getElementById("mobileStepPct").textContent = `${currentStep * 20}%`;
+
+      [1, 2, 3, 4, 5].forEach((n) => {
+        const btn = document.getElementById("stepBtn" + n);
+        if (n === currentStep) {
+          btn.disabled = false;
+          btn.setAttribute("aria-current", "step");
+          btn.removeAttribute("aria-disabled");
+          btn.className = "text-left px-3 py-2 rounded font-semibold bg-[#094174] text-white transition";
+          btn.textContent = labels[n - 1];
+        } else if (n < maxUnlockedStep) {
+          btn.disabled = false;
+          btn.removeAttribute("aria-current");
+          btn.removeAttribute("aria-disabled");
+          btn.className = "text-left px-3 py-2 rounded font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 cursor-pointer transition";
+          btn.textContent = "✓ " + labels[n - 1];
+        } else if (n <= maxUnlockedStep) {
+          btn.disabled = false;
+          btn.removeAttribute("aria-current");
+          btn.removeAttribute("aria-disabled");
+          btn.className = "text-left px-3 py-2 rounded font-medium text-slate-700 hover:bg-slate-100 cursor-pointer transition";
+          btn.textContent = labels[n - 1];
+        } else {
+          btn.disabled = true;
+          btn.removeAttribute("aria-current");
+          btn.setAttribute("aria-disabled", "true");
+          btn.className = "text-left px-3 py-2 rounded font-medium text-slate-500 cursor-not-allowed transition";
+          btn.textContent = labels[n - 1];
+        }
+      });
+    }
+
+    function setInputErrorState(id, hasError) {
+      const el = document.getElementById(id);
+      if (hasError) {
+        el.setAttribute("aria-invalid", "true");
+        el.classList.add("border-red-500", "bg-red-50");
+        el.classList.remove("border-slate-300", "bg-white");
+      } else {
+        el.removeAttribute("aria-invalid");
+        el.classList.remove("border-red-500", "bg-red-50");
+        el.classList.add("border-slate-300", "bg-white");
+      }
+    }
+
+    function handleThresholdBlur(id) {
+      if (document.getElementById(id).value.trim() !== "") {
+        touchedThresholds[id] = true;
+      }
+      validateThresholds(true);
+    }
+
+    function handleThresholdInput(id) {
+      // Clear premature error while typing; only show full error once all 4 or blurred
+      validateThresholds(false);
+    }
+
+    function validateThresholds(showPartialErrors) {
+      const vTC = document.getElementById("inpTooCheap").value.trim();
+      const vC = document.getElementById("inpCheap").value.trim();
+      const vE = document.getElementById("inpExpensive").value.trim();
+      const vTE = document.getElementById("inpTooExpensive").value.trim();
+
+      const box = document.getElementById("validationBox");
+      const nextBtn = document.getElementById("btnStep4Next");
+
+      ["inpTooCheap", "inpCheap", "inpExpensive", "inpTooExpensive"].forEach(id => setInputErrorState(id, false));
+
+      if (!vTC || !vC || !vE || !vTE) {
+        box.className = "bg-slate-100 border-l-4 border-slate-400 p-3.5 rounded text-xs text-slate-700 font-medium";
+        box.textContent = "Complete los cuatro montos mensuales en orden ascendente para continuar.";
+        nextBtn.disabled = true;
+        return false;
+      }
+
+      const tc = Number(vTC), c = Number(vC), e = Number(vE), te = Number(vTE);
+      const errors = [];
+
+      if (tc <= 0) { errors.push("Sospechosamente Baja debe ser mayor a $0."); setInputErrorState("inpTooCheap", true); }
+      if (c <= 0) { errors.push("Atractiva debe ser mayor a $0."); setInputErrorState("inpCheap", true); }
+      if (e <= 0) { errors.push("Elevada debe ser mayor a $0."); setInputErrorState("inpExpensive", true); }
+      if (te <= 0) { errors.push("Prohibitiva debe ser mayor a $0."); setInputErrorState("inpTooExpensive", true); }
+
+      if (tc >= c) {
+        errors.push(`"Sospechosamente Baja" ($${tc}) debe ser menor que "Atractiva" ($${c}).`);
+        setInputErrorState("inpTooCheap", true);
+        setInputErrorState("inpCheap", true);
+      }
+      if (c >= e) {
+        errors.push(`"Atractiva" ($${c}) debe ser menor que "Elevada" ($${e}).`);
+        setInputErrorState("inpCheap", true);
+        setInputErrorState("inpExpensive", true);
+      }
+      if (e >= te) {
+        errors.push(`"Elevada" ($${e}) debe ser menor que "Prohibitiva" ($${te}).`);
+        setInputErrorState("inpExpensive", true);
+        setInputErrorState("inpTooExpensive", true);
+      }
+
+      if (errors.length > 0) {
+        if (showPartialErrors || Object.values(touchedThresholds).every(Boolean)) {
+          box.className = "bg-red-50 border-l-4 border-red-600 p-3.5 rounded text-xs text-red-900 font-medium";
+          box.innerHTML = "<strong>Inconsistencia detectada:</strong> " + errors.join(" ");
+        } else {
+          ["inpTooCheap", "inpCheap", "inpExpensive", "inpTooExpensive"].forEach(id => setInputErrorState(id, false));
+        }
+        nextBtn.disabled = true;
+        return false;
+      }
+
+      box.className = "bg-emerald-50 border-l-4 border-emerald-600 p-3.5 rounded text-xs text-emerald-900 font-medium";
+      box.innerHTML = `✓ Validación Correcta: $${tc} &lt; $${c} &lt; $${e} &lt; $${te}`;
+      nextBtn.disabled = false;
+      return true;
+    }
+
+    function clearStep5Error() {
+      document.getElementById("step5ErrorBox").classList.add("hidden");
+    }
+
+    async function submitNewSurveyResponse() {
+      if (!validateThresholds(true)) return;
+      const nmsCEl = document.getElementById("inpNmsCheap");
+      const nmsEEl = document.getElementById("inpNmsExpensive");
+      const nmsCVal = nmsCEl.value;
+      const nmsEVal = nmsEEl.value;
+      const errBox = document.getElementById("step5ErrorBox");
+
+      if (!nmsCVal || !nmsEVal) {
+        errBox.textContent = "Por favor seleccione la probabilidad de contratación para ambos escenarios (A y B) antes de enviar.";
+        errBox.classList.remove("hidden");
+        (!nmsCVal ? nmsCEl : nmsEEl).focus();
+        return;
+      }
+
+      const org = document.getElementById("inpOrg").value.trim();
+      const contact = document.getElementById("inpContact").value.trim();
+      const segment = document.getElementById("inpSegment").value;
+      const roleCategory = document.getElementById("inpRoleCategory").value;
+      const manualHours = Number(document.getElementById("inpHours").value) || 0;
+      const hourlyRate = Number(document.getElementById("inpRate").value) || 0;
+      const intrinsicValueUsd = Math.round(manualHours * hourlyRate);
+      const tc = Number(document.getElementById("inpTooCheap").value);
+      const c = Number(document.getElementById("inpCheap").value);
+      const e = Number(document.getElementById("inpExpensive").value);
+      const te = Number(document.getElementById("inpTooExpensive").value);
+      const nmsC = Number(nmsCVal);
+      const nmsE = Number(nmsEVal);
+
+      const priorityDatasets = Array.from(document.querySelectorAll(".chk-priority-dataset:checked")).map(el => el.value);
+      const selectedServiceIds = Array.from(document.querySelectorAll(".chk-comp-service:checked")).map(el => el.value);
+      const qualitativeNotes = document.getElementById("inpQualitativeNotes").value.trim();
+
+      const s3 = selectedServiceIds.includes("srv_pipeline_mark_to_market");
+      const tablero = selectedServiceIds.includes("srv_whitelabel_terminal");
+      const sdk = selectedServiceIds.includes("srv_api_client_sdk") || selectedServiceIds.includes("srv_quickstart_integration");
+
+      const submitBtn = document.getElementById("btnSubmitSurvey");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Guardando...";
+      errBox.classList.add("hidden");
+
+      try {
+        const res = await fetch("/api/v1/responses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            alias: org,
+            contact: contact,
+            segment: segment,
+            roleCategory: roleCategory,
+            manualHours: manualHours,
+            intrinsicValueUsd: intrinsicValueUsd,
+            tooCheap: tc,
+            cheap: c,
+            expensive: e,
+            tooExpensive: te,
+            nmsCheap: nmsC,
+            nmsExpensive: nmsE,
+            s3: s3,
+            tablero: tablero,
+            sdk: sdk,
+            selectedServiceIds: selectedServiceIds,
+            priorityDatasets: priorityDatasets,
+            qualitativeNotes: qualitativeNotes
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          errBox.textContent = errData.detail || "No se pudo guardar la evaluación. Verifique los valores ingresados.";
+          errBox.classList.remove("hidden");
+          return;
+        }
+
+        document.getElementById("wizardStep5").classList.add("hidden");
+        document.getElementById("wizardStepDone").classList.remove("hidden");
+        document.getElementById("respondentSummaryBox").innerHTML = `
+          <div class="font-bold text-[#094174] mb-1">Resumen de su Evaluación (${org} · ${segment})</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div class="bg-white p-2 rounded border border-slate-200"><span class="text-slate-500 block">Sospechosamente Baja</span><strong class="text-sky-900">$${tc}/mes</strong></div>
+            <div class="bg-white p-2 rounded border border-slate-200"><span class="text-slate-500 block">Tarifa Atractiva</span><strong class="text-emerald-700">$${c}/mes</strong></div>
+            <div class="bg-white p-2 rounded border border-slate-200"><span class="text-slate-500 block">Tarifa Elevada</span><strong class="text-amber-700">$${e}/mes</strong></div>
+            <div class="bg-white p-2 rounded border border-slate-200"><span class="text-slate-500 block">Tarifa Prohibitiva</span><strong class="text-rose-700">$${te}/mes</strong></div>
+          </div>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (err) {
+        errBox.textContent = "Error de conexión al enviar la evaluación. Por favor intente nuevamente.";
+        errBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "✓ Enviar Evaluación";
+      }
+    }
+
+    function resetWizardForNewSurvey() {
+      document.getElementById("inpOrg").value = "";
+      document.getElementById("inpContact").value = "";
+      document.getElementById("inpTooCheap").value = "";
+      document.getElementById("inpCheap").value = "";
+      document.getElementById("inpExpensive").value = "";
+      document.getElementById("inpTooExpensive").value = "";
+      document.getElementById("inpNmsCheap").value = "";
+      document.getElementById("inpNmsExpensive").value = "";
+      document.getElementById("inpQualitativeNotes").value = "";
+      document.getElementById("chkStimulusAck").checked = false;
+      document.getElementById("btnStep3Next").disabled = true;
+      Object.keys(touchedThresholds).forEach(k => { touchedThresholds[k] = false; });
+      document.querySelectorAll(".chk-priority-dataset").forEach(cb => { cb.checked = false; });
+      activeServices.forEach(s => {
+        const cb = document.getElementById("chk_" + s.id);
+        if (cb) cb.checked = false;
+      });
+      validateThresholds(false);
+      maxUnlockedStep = 1;
+      goToStep(1);
+    }
+  </script>
+</body>
+</html>
