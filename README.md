@@ -51,7 +51,7 @@ ltx-wtp-application/
 
 ## Arranque Rápido Local (Docker)
 
-1. Copiar `.env.example` a `.env` y configurar las credenciales locales:
+1. Copiar `.env.example` a `.env` y configurar las credenciales locales (la contraseña de acceso a `/admin` se define en `ADMIN_PASSWORD` dentro de `.env`, archivo excluido del repositorio por `.gitignore`; en producción se configura como variable de entorno en Render o AWS Secrets Manager):
    ```bash
    cp .env.example .env
    ```
